@@ -1,5 +1,20 @@
 "use strict";
 
+/*
+Copyright 2026 Rose Enos
+
+TODO:
+- implement delivering
+- implement trashing
+- implement setting down
+- implement timer
+- implement points
+- face assets
+- people assets
+- obtain face animation
+- customer line spacing
+*/
+
 const images = {};
 //let scene = 0;
 let scene = 2;
@@ -7,6 +22,11 @@ let x = 350;
 let y = 350;
 const customers = [];
 let betweenCustomers = false;
+let obtainingFace = false;
+let waitingBasin = false;
+let basinCounter = 0;
+let backingUp = false;
+let walkingAway = false;
 let hand = null;
 let voids = [];
 let moods = [];
@@ -36,23 +56,30 @@ function keyReleased() {
         if (key == 'e')
             if (hand == null && x <= 150 && y >= 250 && y <= 475)
                 hand = "basin";
-            else if (x >= 550 && y >= 250 && y <= 475) {
+            else if (x >= 550 && y >= 275 && y <= 475) {
                 let v = -1;
-                if (y >= 250 && y <= 350)
+                if (y >= 275 && y <= 350)
                     v = 0;
                 else if (y > 350 && y <= 450)
                     v = 1;
                 else
                     v = 2;
-                if (hand != null) {
+                if (hand == "basin" && voids[v][2] == null) {
                     voids[v][1] = 0;
                     voids[v][2] = hand;
                     hand = null;
-                } else {
-                    hand = moods[Math.floor(Math.random()*3)];
+                } else if (hand == null && voids[v][1] >= 10) {
+                    hand = moods[Math.floor(Math.random() * 3)];
                     voids[v][1] = -1;
                     voids[v][2] = null;
                 }
+            } else if (hand != null && x >= 450 && x <= 755 && y >= 245 && y <= 300) {
+                if (hand == customers[0][2]) {
+                    customers[0][2] = null;
+                    customers[0][3] = "slab";
+                    obtainingFace = true;
+                }
+                hand = null;
             }
     return false;
 }
@@ -71,15 +98,15 @@ function tutorial() {
 function level() {
     image(images["background"], 0, 0, 800, 600);
     const slab_locations = [
-        [0,150], [0,225], [0,525], // left wall
-        [700,150], [700,225], [700,525], // right wall
-        [100,150], [200,150], [300,150], [400,150]//, [500,225], [600,225] // top wall
+        [0, 150], [0, 225], [0, 525], // left wall
+        [700, 150], [700, 225], [700, 525], // right wall
+        [100, 150], [200, 150], [300, 150], [400, 150]//, [500,225], [600,225] // top wall
     ];
     const crate_locations = [
-        [0,300], [0,375], [0,450], // left wall
+        [0, 300], [0, 375], [0, 450], // left wall
     ]
     const void_locations = [
-        [700,300], [700,375], [700,450] // right wall
+        [700, 300], [700, 375], [700, 450] // right wall
     ]
     for (const location of slab_locations)
         image(images["slab"], location[0], location[1], 100, 100);
@@ -99,12 +126,12 @@ function level() {
         y += dy;
     if (keyIsDown('d') && x <= 600)
         x += dx;
-    image(images["crate"], x, y, 100, 100);
+    image(images["basin"], x, y, 100, 100);
     if (hand != null)
-        image(images[hand], x+25, y-50, 50, 50);
+        image(images[hand], x + 25, y - 50, 50, 50);
 
     if (voids.length == 0)
-        voids = [[300,-1,null], [375,-1,null], [450,-1,null]];
+        voids = [[300, -1, null], [375, -1, null], [450, -1, null]];
     for (const v of voids) {
         if (v[1] >= 0) {
             if (v[1] < 10)
@@ -112,21 +139,37 @@ function level() {
             fill("white");
             rect(700, v[0], 100, 10);
             fill("green");
-            rect(700, v[0], 10*v[1], 10);
+            rect(700, v[0], 10 * v[1], 10);
         }
     }
 
     if (moods.length == 0)
         moods = ["crate", "slab", "void"];
-    if (customers.length == 0 || customers.length < 5 && customers[customers.length - 1][0] == 0) {
+    if (customers.length == 0 || customers.length < 7 && customers[customers.length - 1][0] == 0) {
         betweenCustomers = true;
-        customers.push([-100, 50, moods[Math.floor(Math.random()*3)]]);
+        customers.push([-100, 50, moods[Math.floor(Math.random() * 3)], "crate"]);
+    } else if (obtainingFace && (customers[0][1] += 1) == 100) {
+        obtainingFace = false;
+        waitingBasin = true;
+    } else if (waitingBasin && (basinCounter += 1) == 100) {
+        waitingBasin = false;
+        basinCounter = 0;
+        backingUp = true;
+    } else if (backingUp && (customers[0][1] -= 1) == 50) {
+        backingUp = false;
+        customers[0][3] = "basin";//"customer" + customers[0][2];
+        walkingAway = true;
+    } else if (walkingAway && (customers[0][0] += 5) == 800) {
+        walkingAway = false;
+        customers.splice(0, 1);
+        betweenCustomers = true;
     }
     for (const customer of customers) {
         if (betweenCustomers && (customer[0] += 5) == 550)
-                betweenCustomers = false;
-        image(images["crate"], customer[0], customer[1], 100, 100);
-        image(images[customer[2]], customer[0]+25, customer[1]-50, 50, 50);
+            betweenCustomers = false;
+        image(images[customer[3]], customer[0], customer[1], 100, 100);
+        if (customer[2] != null)
+            image(images[customer[2]], customer[0] + 25, customer[1] - 50, 50, 50);
     }
 }
 
