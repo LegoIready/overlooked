@@ -1,3 +1,5 @@
+"use strict";
+
 const images = {};
 //let scene = 0;
 let scene = 2;
@@ -5,10 +7,13 @@ let x = 350;
 let y = 350;
 const customers = [];
 let betweenCustomers = false;
+let hand = null;
+let voids = [];
+let moods = [];
 
 async function setup() {
     createCanvas(800, 600);
-    imageNames = ["title", "bigface", "bigglow", "tutorial", "ending", "background", "crate", "slab", "void", "basin"];
+    const imageNames = ["title", "bigface", "bigglow", "tutorial", "ending", "background", "crate", "slab", "void", "basin"];
     for (let i = 0; i < imageNames.length; ++i)
         images[imageNames[i]] = await loadImage("/assets/" + imageNames[i] + ".png");
     noSmooth();
@@ -24,6 +29,32 @@ function mouseClicked() {
         if (mouseX >= 225 && mouseX <= 550 && mouseY >= 300 && mouseY <= 600)
             scene = 0;
     }
+}
+
+function keyReleased() {
+    if (scene == 2)
+        if (key == 'e')
+            if (hand == null && x <= 150 && y >= 250 && y <= 475)
+                hand = "basin";
+            else if (x >= 550 && y >= 250 && y <= 475) {
+                let v = -1;
+                if (y >= 250 && y <= 350)
+                    v = 0;
+                else if (y > 350 && y <= 450)
+                    v = 1;
+                else
+                    v = 2;
+                if (hand != null) {
+                    voids[v][1] = 0;
+                    voids[v][2] = hand;
+                    hand = null;
+                } else {
+                    hand = moods[Math.floor(Math.random()*3)];
+                    voids[v][1] = -1;
+                    voids[v][2] = null;
+                }
+            }
+    return false;
 }
 
 function title() {
@@ -58,9 +89,8 @@ function level() {
         image(images["void"], location[0], location[1], 100, 100);
     image(images["basin"], 500, 150, 200, 100);
 
-    const dx = 4
+    const dx = 5;
     const dy = dx;
-    image(images["crate"], x, y, 100, 100);
     if (keyIsDown('w') && y >= 250)
         y -= dy;
     if (keyIsDown('a') && x >= 100)
@@ -69,8 +99,25 @@ function level() {
         y += dy;
     if (keyIsDown('d') && x <= 600)
         x += dx;
+    image(images["crate"], x, y, 100, 100);
+    if (hand != null)
+        image(images[hand], x+25, y-50, 50, 50);
 
-    const moods = ["crate", "slab", "void"];
+    if (voids.length == 0)
+        voids = [[300,-1,null], [375,-1,null], [450,-1,null]];
+    for (const v of voids) {
+        if (v[1] >= 0) {
+            if (v[1] < 10)
+                v[1] += 0.01;
+            fill("white");
+            rect(700, v[0], 100, 10);
+            fill("green");
+            rect(700, v[0], 10*v[1], 10);
+        }
+    }
+
+    if (moods.length == 0)
+        moods = ["crate", "slab", "void"];
     if (customers.length == 0 || customers.length < 5 && customers[customers.length - 1][0] == 0) {
         betweenCustomers = true;
         customers.push([-100, 50, moods[Math.floor(Math.random()*3)]]);
