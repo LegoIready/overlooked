@@ -1,9 +1,10 @@
 const images = {};
-let scene = 0;
+//let scene = 0;
+let scene = 2;
 
 async function setup() {
     createCanvas(800, 600);
-    imageNames = ["title", "bigface", "bigglow", "tutorial", "ending"];
+    imageNames = ["title", "bigface", "bigglow", "tutorial", "ending", "background", "crate", "slab", "void", "basin"];
     for (let i = 0; i < imageNames.length; ++i)
         images[imageNames[i]] = await loadImage("/assets/" + imageNames[i] + ".png");
     noSmooth();
@@ -33,7 +34,25 @@ function tutorial() {
 }
 
 function level() {
-    scene = 3
+    image(images["background"], 0, 0, 800, 600);
+    const slab_locations = [
+        [0,150], [0,225], [0,525], // left wall
+        [700,150], [700,225], [700,525], // right wall
+        [100,150], [200,150], [300,150], [400,150]//, [500,225], [600,225] // top wall
+    ];
+    const crate_locations = [
+        [0,300], [0,375], [0,450], // left wall
+    ]
+    const void_locations = [
+        [700,300], [700,375], [700,450] // right wall
+    ]
+    for (const location of slab_locations)
+        image(images["slab"], location[0], location[1], 100, 100);
+    for (const location of crate_locations)
+        image(images["crate"], location[0], location[1], 100, 100);
+    for (const location of void_locations)
+        image(images["void"], location[0], location[1], 100, 100);
+    image(images["basin"], 500, 150, 200, 100);
 }
 
 function ending() {
