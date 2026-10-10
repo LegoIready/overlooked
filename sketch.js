@@ -13,8 +13,7 @@ TODO:
 */
 
 const images = {};
-//let scene = 0;
-let scene = 2;
+let scene = 2; // debugging
 let x = 350;
 let y = 350;
 const customers = [];
@@ -26,6 +25,7 @@ let backingUp = false;
 let walkingAway = false;
 let hand = null;
 let voids = [];
+let counters = [];
 let moods = [];
 let points = 0;
 let timer = 0;
@@ -76,13 +76,31 @@ function keyReleased() {
                     voids[v][1] = -1;
                     voids[v][2] = null;
                 }
-            } else if (hand != null && x >= 450 && x <= 755 && y >= 245 && y <= 300) {
+            } else if (hand != null && x >= 475 && x <= 755 && y >= 245 && y <= 300) {
                 if (hand == customers[0][2]) {
                     customers[0][2] = null;
                     customers[0][3] = "slab";
                     obtainingFace = true;
-                }
+                } else if (hand != null && hand != customers[0][2])
+                    points -= 20;
                 hand = null;
+            } else if (x < 475 && y <= 300) {
+                let c = -1;
+                if (x < 200)
+                    c = 0;
+                else if (x < 300)
+                    c = 1;
+                else if (x < 400)
+                    c = 2;
+                else
+                    c = 3;
+                if (hand != null && counters[c][1] == null) {
+                    counters[c][1] = hand;
+                    hand = null;
+                } else if (hand == null && counters[c][1] != null) {
+                    hand = counters[c][1];
+                    counters[c][1] = null;
+                }
             }
     return false;
 }
@@ -132,6 +150,12 @@ function level() {
     image(images["basin"], x, y, 100, 100);
     if (hand != null)
         image(images[hand], x + 25, y - 50, 50, 50);
+
+    if (counters.length == 0)
+        counters = [[100, null], [200, null], [300, null], [400, null]];
+    for (const c of counters)
+        if (c[1] != null)
+            image(images[c[1]], c[0] + 25, 150 + 25, 50, 50);
 
     if (voids.length == 0)
         voids = [[300, -1, null], [375, -1, null], [450, -1, null]];
