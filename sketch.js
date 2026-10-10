@@ -4,11 +4,8 @@
 Copyright 2026 Rose Enos
 
 TODO:
-- implement delivering
 - implement trashing
 - implement setting down
-- implement timer
-- implement points
 - face assets
 - people assets
 - obtain face animation
@@ -30,6 +27,8 @@ let walkingAway = false;
 let hand = null;
 let voids = [];
 let moods = [];
+let points = 0;
+let timer = 0;
 
 async function setup() {
     createCanvas(800, 600);
@@ -37,6 +36,7 @@ async function setup() {
     for (let i = 0; i < imageNames.length; ++i)
         images[imageNames[i]] = await loadImage("/assets/" + imageNames[i] + ".png");
     noSmooth();
+    textSize(48);
 }
 
 function mouseClicked() {
@@ -46,8 +46,11 @@ function mouseClicked() {
     } else if (scene == 1) {
         scene = 2;
     } else if (scene == 3) {
-        if (mouseX >= 225 && mouseX <= 550 && mouseY >= 300 && mouseY <= 600)
+        if (mouseX >= 225 && mouseX <= 550 && mouseY >= 300 && mouseY <= 600) {
+            points = 0;
+            timer = -1;
             scene = 0;
+        }
     }
 }
 
@@ -140,6 +143,7 @@ function level() {
             rect(700, v[0], 100, 10);
             fill("green");
             rect(700, v[0], 10 * v[1], 10);
+            fill("black");
         }
     }
 
@@ -154,6 +158,7 @@ function level() {
     } else if (waitingBasin && (basinCounter += 1) == 100) {
         waitingBasin = false;
         basinCounter = 0;
+        points += 100;
         backingUp = true;
     } else if (backingUp && (customers[0][1] -= 1) == 50) {
         backingUp = false;
@@ -171,6 +176,15 @@ function level() {
         if (customer[2] != null)
             image(images[customer[2]], customer[0] + 25, customer[1] - 50, 50, 50);
     }
+
+    text("Points: " + points, 0, 600);
+
+    if (timer == -1)
+        timer = 10000;
+    timer -= 1;
+    text("Time: " + timer, 550, 600);
+    if (timer == 0)
+        scene = 3;
 }
 
 function ending() {
@@ -178,6 +192,7 @@ function ending() {
     if (mouseX >= 225 && mouseX <= 550 && mouseY >= 300 && mouseY <= 600)
         image(images["bigglow"], 200, 300, 400, 300);
     image(images["bigface"], 200, 300, 400, 300);
+    text("Points: " + points, 0, 600);
 }
 
 function draw() {
