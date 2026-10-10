@@ -1,6 +1,10 @@
 const images = {};
 //let scene = 0;
 let scene = 2;
+let x = 350;
+let y = 350;
+const customers = [];
+let betweenCustomers = false;
 
 async function setup() {
     createCanvas(800, 600);
@@ -53,6 +57,30 @@ function level() {
     for (const location of void_locations)
         image(images["void"], location[0], location[1], 100, 100);
     image(images["basin"], 500, 150, 200, 100);
+
+    const dx = 4
+    const dy = dx;
+    image(images["crate"], x, y, 100, 100);
+    if (keyIsDown('w') && y >= 250)
+        y -= dy;
+    if (keyIsDown('a') && x >= 100)
+        x -= dx;
+    if (keyIsDown('s') && y <= 500)
+        y += dy;
+    if (keyIsDown('d') && x <= 600)
+        x += dx;
+
+    const moods = ["crate", "slab", "void"];
+    if (customers.length == 0 || customers.length < 5 && customers[customers.length - 1][0] == 0) {
+        betweenCustomers = true;
+        customers.push([-100, 50, moods[Math.floor(Math.random()*3)]]);
+    }
+    for (const customer of customers) {
+        if (betweenCustomers && (customer[0] += 5) == 550)
+                betweenCustomers = false;
+        image(images["crate"], customer[0], customer[1], 100, 100);
+        image(images[customer[2]], customer[0]+25, customer[1]-50, 50, 50);
+    }
 }
 
 function ending() {
