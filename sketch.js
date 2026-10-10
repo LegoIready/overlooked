@@ -2,18 +2,10 @@
 
 /*
 Copyright 2026 Rose Enos
-
-TODO:
-- implement trashing
-- implement setting down
-- face assets
-- people assets
-- obtain face animation
-- customer line spacing
 */
 
 const images = {};
-let scene = 2; // debugging
+let scene = 0; // debugging
 let x = 350;
 let y = 350;
 const customers = [];
@@ -28,11 +20,11 @@ let voids = [];
 let counters = [];
 let moods = [];
 let points = 0;
-let timer = 0;
+let timer = -1;
 
 async function setup() {
     createCanvas(800, 600);
-    const imageNames = ["title", "bigface", "bigglow", "tutorial", "ending", "background", "crate", "slab", "void", "basin"];
+    const imageNames = ["title", "bigface", "bigglow", "tutorial", "ending", "background", "crate", "slab", "void", "basin", "faceblank", "facehappy", "faceangry", "facesad", "customerblank", "customerobtaining", "customerhappy", "customerangry", "customersad", "player_front"];
     for (let i = 0; i < imageNames.length; ++i)
         images[imageNames[i]] = await loadImage("/assets/" + imageNames[i] + ".png");
     noSmooth();
@@ -47,9 +39,22 @@ function mouseClicked() {
         scene = 2;
     } else if (scene == 3) {
         if (mouseX >= 225 && mouseX <= 550 && mouseY >= 300 && mouseY <= 600) {
+            scene = 0; // debugging
+            x = 350;
+            y = 350;
+            customers = [];
+            betweenCustomers = false;
+            obtainingFace = false;
+            waitingBasin = false;
+            basinCounter = 0;
+            backingUp = false;
+            walkingAway = false;
+            hand = null;
+            voids = [];
+            counters = [];
+            moods = [];
             points = 0;
             timer = -1;
-            scene = 0;
         }
     }
 }
@@ -58,7 +63,7 @@ function keyReleased() {
     if (scene == 2)
         if (key == 'e')
             if (hand == null && x <= 150 && y >= 250 && y <= 475)
-                hand = "basin";
+                hand = "faceblank";
             else if (x >= 550 && y >= 275 && y <= 475) {
                 let v = -1;
                 if (y >= 275 && y <= 350)
@@ -67,7 +72,7 @@ function keyReleased() {
                     v = 1;
                 else
                     v = 2;
-                if (hand == "basin" && voids[v][2] == null) {
+                if (hand == "faceblank" && voids[v][2] == null) {
                     voids[v][1] = 0;
                     voids[v][2] = hand;
                     hand = null;
@@ -78,8 +83,9 @@ function keyReleased() {
                 }
             } else if (hand != null && x >= 475 && x <= 755 && y >= 245 && y <= 300) {
                 if (hand == customers[0][2]) {
+                    customers[0].push(customers[0][2].slice(4));
                     customers[0][2] = null;
-                    customers[0][3] = "slab";
+                    customers[0][3] = "customerobtaining";
                     obtainingFace = true;
                 } else if (hand != null && hand != customers[0][2])
                     points -= 20;
@@ -147,7 +153,7 @@ function level() {
         y += dy;
     if (keyIsDown('d') && x <= 600)
         x += dx;
-    image(images["basin"], x, y, 100, 100);
+    image(images["player_front"], x, y, 100, 100);
     if (hand != null)
         image(images[hand], x + 25, y - 50, 50, 50);
 
@@ -172,10 +178,10 @@ function level() {
     }
 
     if (moods.length == 0)
-        moods = ["crate", "slab", "void"];
+        moods = ["facehappy", "faceangry", "facesad"];
     if (customers.length == 0 || customers.length < 7 && customers[customers.length - 1][0] == 0) {
         betweenCustomers = true;
-        customers.push([-100, 50, moods[Math.floor(Math.random() * 3)], "crate"]);
+        customers.push([-100, 50, moods[Math.floor(Math.random() * 3)], "customerblank"]);
     } else if (obtainingFace && (customers[0][1] += 1) == 100) {
         obtainingFace = false;
         waitingBasin = true;
@@ -186,7 +192,7 @@ function level() {
         backingUp = true;
     } else if (backingUp && (customers[0][1] -= 1) == 50) {
         backingUp = false;
-        customers[0][3] = "basin";//"customer" + customers[0][2];
+        customers[0][3] = "customer" + customers[0][4];
         walkingAway = true;
     } else if (walkingAway && (customers[0][0] += 5) == 800) {
         walkingAway = false;
